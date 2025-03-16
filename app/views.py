@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash 
 from app.models import UserProfile
 from app.forms import LoginForm
+from app.forms import UploadForm
 
 
 ###
@@ -26,16 +27,23 @@ def about():
 
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
-    # Instantiate your form class
+    
+    form = UploadForm()
 
-    # Validate file upload on submit
+    # Handle file upload on form submission (POST request)
     if form.validate_on_submit():
-        # Get file data and save to your uploads folder
+        # Get the uploaded file from the form
+        file = form.file.data
 
-        flash('File Saved', 'success')
-        return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
+        # Secure the filename and save it to the upload folder
+        filename = secure_filename(file.filename)
+        upload_folder = app.config['UPLOAD_FOLDER']  # Make sure this is configured
+        file.save(os.path.join(upload_folder, filename))
 
-    return render_template('upload.html')
+        flash('File successfully uploaded!', 'success')
+        return redirect(url_for('home'))  # Redirect to home or another route
+
+    return render_template('upload.html', form=form) 
 
 
 @app.route('/login', methods=['POST', 'GET'])
